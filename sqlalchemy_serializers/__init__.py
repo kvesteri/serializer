@@ -97,12 +97,11 @@ class JSONMixin(object):
         Attribute sets can be used as a convenient shortcuts in as_json()
 
         Examples::
-            >>> User(Model, JSONMixin):
-                def attribute_sets():
-                    return {'details': ['id', 'name', 'age']}
 
-            >>> User.as_json(only='details')
-
+            >>> User(JSONMixin):
+            ...     def attribute_sets():
+            ...         return {'details': ['id', 'name', 'age']}
+            >>> User(id=1, name='someone',).as_json(only='details')
             {'id': 1, 'name': 'Someone', 'age': 14}
         """
         return {}
@@ -202,6 +201,26 @@ def cleanup(json):
     Remove all missing values. Sometimes its useful for object methods
     to return missing value in order to not include that value in the
     json format.
+
+    Examples::
+
+        >>> User(JSONMixin):
+        ...     def attributes():
+        ...         return ['id', 'name', 'birthday', 'somefunc']
+        ...     def age():
+        ...         if birthday:
+        ...             return empty
+        ...         else:
+        ...             return calc_age(self.birthday)
+
+
+    Now if some user has birthday the age function is going to return the age.
+    However if user doesn't have birthday the age function is returning a
+    special empty value which tells jsonifier not to include that key in
+    json format.
+
+        >>> User(id=1, name='someone').as_json()
+        {'id': 1, 'name': 'Someone'}
     """
     for key in copy(json):
         if json[key] is empty:
