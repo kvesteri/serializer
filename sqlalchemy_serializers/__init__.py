@@ -1,4 +1,3 @@
-from copy import copy
 from datetime import datetime, date
 from sqlalchemy.types import Enum
 
@@ -222,10 +221,7 @@ def cleanup(json):
         >>> User(id=1, name='someone').as_json()
         {'id': 1, 'name': 'Someone'}
     """
-    for key in copy(json):
-        if json[key] is empty:
-            del json[key]
-    return json
+    return dict(filter(lambda a: a[1] is not empty, json.items()))
 
 
 def jsonify_model(model, only=None, exclude=None, include=None):
