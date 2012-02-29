@@ -6,21 +6,20 @@ except ImportError:
 
 setup(
     name='sqlalchemy-serializers',
-    version='0.1.0',
+    version='0.1.1',
     description='Serializers for SqlAlchemy',
     long_description=__doc__,
     author='Konsta Vesterinen',
     author_email='konsta.vesterinen@gmail.com',
     url='http://github.com/kvesteri/sqlalchemy-serializers',
-    packages=['flask_generic_views'],
+    packages=['sqlalchemy_serializers'],
     include_package_data=True,
     license='BSD',
     zip_safe=False,
     platforms='any',
     install_requires=[
         'setuptools',
-        'Flask',
-        'Flask-SQLAlchemy'
+        'SQLAlchemy'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
