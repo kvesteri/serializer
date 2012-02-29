@@ -242,6 +242,13 @@ def jsonify_model(model, only=None, exclude=None, include=None):
 
 
 def jsonify_iterable(model, iterable, exclude=None):
+    """
+    Jsonfies iterable
+
+    :param model: model of which the attributes belong to
+    :param iterable: attributes as iterable
+    :param exclude: excluded attributes
+    """
     attr_sets = model.attribute_sets()
     json = {}
 
