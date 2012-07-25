@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from json_alchemy import JSONMixin, empty
+from json_alchemy import JSONAlchemyMixin, empty
 
 
 class TeamQuery(object):
@@ -9,7 +9,7 @@ class TeamQuery(object):
         team.name = 'some team'
 
 
-class Team(JSONMixin):
+class Team(JSONAlchemyMixin):
     __tablename__ = 'team'
 
     query = TeamQuery()
@@ -18,7 +18,7 @@ class Team(JSONMixin):
         return ['name']
 
 
-class User(JSONMixin):
+class User(JSONAlchemyMixin):
     __tablename = 'user'
 
     def attributes(self):

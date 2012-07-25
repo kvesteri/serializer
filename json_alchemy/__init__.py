@@ -29,7 +29,7 @@ def dump_non_callable(value, args):
         >>> dump_scalar(datetime(2000, 11, 11))
         "2000-11-11 00:00:00Z"
     """
-    if isinstance(value, JSONMixin):
+    if isinstance(value, JSONAlchemyMixin):
         value = jsonify_model(value, **copy_args(args))
     elif isinstance(value, list):
         tmp = []
@@ -56,7 +56,7 @@ def copy_args(args):
     return copy_args
 
 
-class JSONMixin(object):
+class JSONAlchemyMixin(object):
     def attributes(self):
         """
         This method is being used by as_json for defining the default json
