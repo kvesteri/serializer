@@ -229,6 +229,14 @@ def jsonify_model(model, only=None, exclude=None, include=None):
     Jsonifies given model object
 
     See :func:`as_json` for more info
+
+    :param model: object to be converted into json
+    :param only: list of attributes to be included in json, if this parameter
+        is not set attributes() method of the model will be used for obtaining
+        the list of attributes names
+    :param exclude: list of attributes to be excluded from the json format
+    :param include: list of attribute names to be included in json, attribute
+        names can be any properties of `model` (even method names)
     """
     json = {}
     if only:
@@ -243,7 +251,7 @@ def jsonify_model(model, only=None, exclude=None, include=None):
 
 def jsonify_iterable(model, iterable, exclude=None):
     """
-    Jsonfies iterable
+    Jsonifies iterable
 
     :param model: model of which the attributes belong to
     :param iterable: attributes as iterable

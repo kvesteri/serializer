@@ -1,4 +1,3 @@
-from pytest import raises
 from datetime import datetime, date
 from sqlalchemy_serializers import JSONMixin, empty
 
@@ -142,7 +141,7 @@ class TestSerializationParams(object):
 
         assert user.as_json(only=[('name', {'default': 'empty'})]) == json
 
-    def test_none_can_not_be_used_as_default_argument(self):
+    def test_none_can_be_used_as_default_argument(self):
         user = User()
         user.name = None
 
