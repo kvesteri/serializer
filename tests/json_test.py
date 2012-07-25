@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from sqlalchemy_serializers import JSONMixin, empty
+from json_alchemy import JSONMixin, empty
 
 
 class TeamQuery(object):
@@ -28,8 +28,8 @@ class User(JSONMixin):
             'created_at'
         ]
 
-    def somemethod(self, a):
-        return a
+    def somemethod(self):
+        return 123
 
 
 class TestDumpTypes(object):
@@ -53,18 +53,9 @@ class TestDumpTypes(object):
     def test_supports_instance_methods(self):
         user = User()
         json = {
-            'somemethod': 'a'
+            'somemethod': 123
         }
-        func_args = {'func_args': ['a']}
-        assert user.as_json(only=[('somemethod', func_args)]) == json
-
-    def test_supports_functions(self):
-        user = User()
-        json = {
-            'somefunc': 'a'
-        }
-        func = lambda: 'a'
-        assert user.as_json(only=[('somefunc', {'attr': func})]) == json
+        assert user.as_json(only=['somemethod']) == json
 
     def test_supports_date_type(self):
         user = User()
@@ -119,7 +110,7 @@ class TestSerializationParams(object):
             'fullname': 'John Matrix'
         }
 
-        assert user.as_json(only=[('fullname', {'attr': 'name'})]) == json
+        assert user.as_json(only=[('name as fullname')]) == json
 
     def test_supports_exclude(self):
         user = User()
@@ -130,16 +121,6 @@ class TestSerializationParams(object):
         }
 
         assert user.as_json(exclude=['age', 'created_at']) == json
-
-    def test_supports_default_argument(self):
-        user = User()
-        user.name = None
-
-        json = {
-            'name': 'empty'
-        }
-
-        assert user.as_json(only=[('name', {'default': 'empty'})]) == json
 
     def test_none_can_be_used_as_default_argument(self):
         user = User()
@@ -176,7 +157,7 @@ class TestSerializationParams(object):
 
         assert userA.as_json(only=[
             'name',
-            ('friend 1', {'attr': 'friend', 'only': ['name']})
+            ('friend as friend 1', {'only': ['name']})
         ]) == json
 
     def test_supports_json_cleanup(self):
