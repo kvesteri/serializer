@@ -1,5 +1,4 @@
-from datetime import datetime, date
-from sqlalchemy.types import Enum
+import simplejson as json
 
 
 class Empty():
@@ -17,46 +16,11 @@ def is_callable(object):
 def dumps(value, args):
     if is_callable(value):
         value = value()
-    value = dump_non_callable(value, args)
+    value = dump_object(value, args)
     return value
 
 
-def dump_non_callable(value, args):
-    """
-    Serializes a non callable variable
-
-    Examples::
-        >>> dump_scalar(datetime(2000, 11, 11))
-        "2000-11-11 00:00:00Z"
-    """
-    if isinstance(value, JSONAlchemyMixin):
-        value = jsonify_model(value, **copy_args(args))
-    elif isinstance(value, list):
-        tmp = []
-        for obj in value:
-            tmp.append(dumps(obj, args))
-        return tmp
-    elif isinstance(value, datetime):
-        value = value.isoformat() + 'Z' if value else None
-    elif isinstance(value, date):
-        value = value.isoformat() if value else None
-    elif isinstance(value, Enum):
-        value = None
-    return value
-
-
-def copy_args(args):
-    copy_args = {}
-    if 'only' in args:
-        copy_args['only'] = args['only']
-    if 'include' in args:
-        copy_args['include'] = args['include']
-    if 'exclude' in args:
-        copy_args['exclude'] = args['exclude']
-    return copy_args
-
-
-class JSONAlchemyMixin(object):
+class BourneMixin(object):
     def attributes(self):
         """
         This method is being used by as_json for defining the default json
@@ -89,6 +53,12 @@ class JSONAlchemyMixin(object):
         This mimics the as_json found in RoR ActiveModel
         for more info see:
         http://api.rubyonrails.org/classes/ActiveModel/Serializers/JSON.html
+        """
+        return json.dumps(self.as_json_dict(), use_decimal=True)
+
+    def as_json_dict(self, only=None, exclude=None, include=None):
+        """
+        Returns object attributes as a dictionary with jsonified values
 
         Without any options, the returned JSON string will include all the
         fields returned by the models attribute() method. For example:
@@ -162,6 +132,97 @@ class JSONAlchemyMixin(object):
         return jsonify_model(self, only=only, exclude=exclude, include=include)
 
 
+def jsonify_model(model, only=None, exclude=None, include=None):
+    """
+    Jsonifies given model object
+
+    See :func:`as_json` for more info
+
+    :param model: object to be converted into json
+    :param only: list of attributes to be included in json, if this parameter
+        is not set attributes() method of the model will be used for obtaining
+        the list of attributes names
+    :param exclude: list of attributes to be excluded from the json format
+    :param include: list of attribute names to be included in json, attribute
+        names can be any properties of `model` (even method names)
+    """
+    json = {}
+    if only:
+        json.update(jsonify_iterable(model, only))
+    else:
+        json.update(jsonify_iterable(model, model.attributes(), exclude))
+    if include:
+        json.update(jsonify_iterable(model, include))
+
+    return cleanup(json)
+
+
+OBJECT_DUMPERS = {
+    BourneMixin: lambda a, b: jsonify_model(a, **copy_args(b)),
+    'datetime': lambda a, b: a.isoformat() + 'Z' if a else None,
+    'date': lambda a, b: a.isoformat() if a else None,
+    'list': lambda a, b: [dumps(c, b) for c in a],
+}
+
+
+def register_dumper(key, dumper_callable):
+    """
+    Registers new dumper for given class type
+
+    Examples::
+        >>> class MyClassA(object):
+        ...     pass
+        >>> class MyClassB(MyClassA):
+        ...     pass
+        >>> register_dumper('MyClassA', lambda a: 'myclass')
+        >>> dump_object(MyClassA())
+        "myclass"
+        >>> dump_object(MyClassB())
+        <MyClassB instance>
+
+
+        >>> class MyClassA(object):
+        ...     pass
+        >>> class MyClassB(MyClassA):
+        ...     pass
+        >>> register_dumper(MyClassA, lambda a: 'myclass')
+        >>> dump_object(MyClassA())
+        "myclass"
+        >>> dump_object(MyClassB())
+        "myclass"
+    """
+    OBJECT_DUMPERS[key] = dumper_callable
+
+
+def dump_object(value, args):
+    """
+    Serializes a non callable variable
+
+    Examples::
+        >>> dump_object(datetime(2000, 11, 11))
+        "2000-11-11 00:00:00Z"
+    """
+    #print value, args
+    for class_ in OBJECT_DUMPERS:
+        if isinstance(class_, basestring):
+            if class_ == value.__class__.__name__:
+                value = OBJECT_DUMPERS[class_](value, args)
+        elif isinstance(value, class_):
+            value = OBJECT_DUMPERS[class_](value, args)
+    return value
+
+
+def copy_args(args):
+    copy_args = {}
+    if 'only' in args:
+        copy_args['only'] = args['only']
+    if 'include' in args:
+        copy_args['include'] = args['include']
+    if 'exclude' in args:
+        copy_args['exclude'] = args['exclude']
+    return copy_args
+
+
 def unpack_args(args):
     """
     unpacks args
@@ -219,31 +280,6 @@ def cleanup(json):
     return dict(filter(lambda a: a[1] is not empty, json.items()))
 
 
-def jsonify_model(model, only=None, exclude=None, include=None):
-    """
-    Jsonifies given model object
-
-    See :func:`as_json` for more info
-
-    :param model: object to be converted into json
-    :param only: list of attributes to be included in json, if this parameter
-        is not set attributes() method of the model will be used for obtaining
-        the list of attributes names
-    :param exclude: list of attributes to be excluded from the json format
-    :param include: list of attribute names to be included in json, attribute
-        names can be any properties of `model` (even method names)
-    """
-    json = {}
-    if only:
-        json.update(jsonify_iterable(model, only))
-    else:
-        json.update(jsonify_iterable(model, model.attributes(), exclude))
-    if include:
-        json.update(jsonify_iterable(model, include))
-
-    return cleanup(json)
-
-
 def jsonify_iterable(model, iterable, exclude=None):
     """
     Jsonifies iterable
@@ -269,14 +305,21 @@ def jsonify_iterable(model, iterable, exclude=None):
     return json
 
 
-def jsonify_attribute(model, json_key, args=None):
+def jsonify_attribute(model, attr, args=None):
+    """
+    Jsonifies single object attribute
+
+    :param model: model of which the attribute belongs to
+    :param attr: the name of the attribute
+    :param args: additional args
+    """
     if not args:
         args = {}
 
-    if not hasattr(model, json_key):
+    if not hasattr(model, attr):
         value = empty
     else:
-        value = getattr(model, json_key)
+        value = getattr(model, attr)
 
     value = dumps(value, args)
 
