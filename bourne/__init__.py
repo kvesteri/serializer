@@ -63,6 +63,15 @@ class BourneMixin(object):
         Without any options, the returned JSON string will include all the
         fields returned by the models attribute() method. For example:
 
+        class User(object):
+            def attributes(self):
+                return [
+                    'id',
+                    'name',
+                    'first_name',
+                    'last_name'
+                ]
+
         user = User.query.get(1)
         user.as_json()
 
@@ -91,6 +100,12 @@ class BourneMixin(object):
               "first_name": "John",
               "last_name": "Matrix",
               "weight": 100}
+
+        Sometimes its useful to assign aliases for attributes. This can be
+        achieved using keyword 'as'.
+
+        user.as_json(only=['name as full_name'])
+        # => {"full_name": "John Matrix"}
 
         In order to fine grain what gets included in associations you can use
         'include' parameter with additional arguments.
@@ -159,9 +174,9 @@ def jsonify_model(model, only=None, exclude=None, include=None):
 
 OBJECT_DUMPERS = {
     BourneMixin: lambda a, b: jsonify_model(a, **copy_args(b)),
-    'datetime': lambda a, b: a.isoformat() + 'Z' if a else None,
+    'datetime': lambda a, b: a.strftime('%Y-%m-%dT%H:%M:%SZ') if a else None,
     'date': lambda a, b: a.isoformat() if a else None,
-    'list': lambda a, b: [dumps(c, b) for c in a],
+    list: lambda a, b: [dumps(c, b) for c in a],
 }
 
 
