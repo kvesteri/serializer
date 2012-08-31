@@ -26,7 +26,7 @@ class BourneMixin(object):
         This method is being used by as_json for defining the default json
         attributes for this model.
 
-        Models using JSONMixin can override this and return a list of desired
+        Models using BourneMixin can override this and return a list of desired
         default attributes.
         """
         return self.__table__.c.keys()
@@ -40,7 +40,7 @@ class BourneMixin(object):
 
         Examples::
 
-            >>> User(JSONMixin):
+            >>> User(BourneMixin):
             ...     def attribute_sets():
             ...         return {'details': ['id', 'name', 'age']}
             >>> User(id=1, name='someone',).as_json(only='details')
@@ -63,7 +63,7 @@ class BourneMixin(object):
         Without any options, the returned JSON string will include all the
         fields returned by the models attribute() method. For example:
 
-        class User(object):
+        class User(BourneMixin):
             def attributes(self):
                 return [
                     'id',
@@ -274,7 +274,7 @@ def cleanup(json):
 
     Examples::
 
-        >>> User(JSONMixin):
+        >>> User(BourneMixin):
         ...     def attributes():
         ...         return ['id', 'name', 'birthday', 'somefunc']
         ...     def age():
