@@ -7,6 +7,9 @@ Bourne provides smart Python object to json conversion.
 QuickStart
 ==========
 
+1. Make your class use BourneMixin
+2. Define attributes() method and make at return a list of property names
+
 Example::
 
     from bourne import BourneMixin
