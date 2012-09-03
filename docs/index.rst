@@ -25,12 +25,16 @@ Example::
     user.as_json()
     # "{'first_name': 'John', 'last_name': 'Matrix'}"
 
+    user.as_json_dict()
+    # {'first_name': 'John', 'last_name': 'Matrix'}
+
 
 How to handle relations
 =======================
 
-Let's say we have two classes Event and Location and we want to jsonify an
-event along with its location.::
+Bourne supports jsonifying deep object structures. Let's say we have two classes
+Event and Location and we want to jsonify an event along with its location. ::
+
 
     class Location(BourneMixin):
         name = 'Some Location'
@@ -64,6 +68,40 @@ and only parameters. ::
 
     # include all the field defined in attributes but exclude 'email'
     User.as_json(include=['email'])
+
+
+Using attribute sets
+====================
+
+Many times you may have situations where having one default attribute list is not
+enough. For example you may have multiple views that return user details and many views
+that return user with only its basic info. ::
+
+    class User(BourneMixin):
+        first_name = 'John'
+        last_name = 'Matrix'
+        email = 'john.matrix@example.com'
+        age = 33
+        is_active = True
+
+        def attributes(self):
+            return ['first_name', 'last_name', 'email']
+
+        def attribute_sets(self):
+            return {'details': ['age', 'is_active']}
+
+
+    user = User()
+    user.as_json_dict(include='details')
+    '''
+        {
+            'first_name': 'John',
+            'last_name': 'Matrix',
+            'email': 'john.matrix@example.com',
+            'age': 33,
+            'is_active': True
+        }
+    '''
 
 
 Indices and tables
