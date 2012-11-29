@@ -1,21 +1,21 @@
-Welcome to bourne documentation!
+Welcome to Serializer documentation!
 ==================================
 
-Bourne provides smart Python object to json conversion.
+Serializer provides Easy object serialization. Mimics RoR ActiveRecord serializer.
 
 
 QuickStart
 ==========
 
-1. Make your class use BourneMixin
-2. Define attributes() method and make at return a list of property names
+1. Make your class inherit Serializable mixin.
+2. Define attributes() method and make it return a list of property names
 
 Example::
 
-    from bourne import BourneMixin
+    from serializer import Serializable
 
 
-    class User(BourneMixin):
+    class User(Serializable):
         first_name = 'John'
         last_name = 'Matrix'
         email = 'john.matrix@example.com'
@@ -35,17 +35,17 @@ Example::
 How to handle relations
 =======================
 
-Bourne supports jsonifying deep object structures. Let's say we have two classes
+Serializer supports serializing of deep object structures. Let's say we have two classes
 Event and Location and we want to jsonify an event along with its location. ::
 
 
-    class Location(BourneMixin):
+    class Location(Serializable):
         name = 'Some Location'
 
         def attributes(self):
             return ['name']
 
-    class Event(BourneMixin):
+    class Event(Serializable):
         name = 'Some Event'
         location = Location()
 
@@ -80,7 +80,7 @@ Many times you may have situations where having one default attribute list is no
 enough. For example you may have multiple views that return user details and many views
 that return user with only its basic info. ::
 
-    class User(BourneMixin):
+    class User(Serializable):
         first_name = 'John'
         last_name = 'Matrix'
         email = 'john.matrix@example.com'
