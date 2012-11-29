@@ -1,13 +1,13 @@
 from datetime import datetime, date
-from bourne import BourneMixin, empty
+from serializer import Serializable, empty
 
 
-class Team(BourneMixin):
+class Team(Serializable):
     def attributes(self):
         return ['name']
 
 
-class User(BourneMixin):
+class User(Serializable):
     def attributes(self):
         return [
             'name',
@@ -32,14 +32,14 @@ class TestDumpTypes(object):
             'name': 'John Matrix'
         }
 
-        assert user.as_json_dict() == json
+        assert user.as_json() == json
 
     def test_supports_instance_methods(self):
         user = User()
         json = {
             'somemethod': 123
         }
-        assert user.as_json_dict(only=['somemethod']) == json
+        assert user.as_json(only=['somemethod']) == json
 
     def test_supports_date_type(self):
         user = User()
@@ -53,7 +53,7 @@ class TestDumpTypes(object):
             'name': 'John Matrix'
         }
 
-        assert user.as_json_dict() == json
+        assert user.as_json() == json
 
     def test_supports_list_type(self):
         user = User()
@@ -68,7 +68,7 @@ class TestDumpTypes(object):
             'name': 'John Matrix',
             'friends': [1, 2, 3, 4]
         }
-        assert user.as_json_dict(include=['friends']) == json
+        assert user.as_json(include=['friends']) == json
 
     def test_supports_lists_with_datetimes(self):
         user = User()
@@ -77,7 +77,7 @@ class TestDumpTypes(object):
         json = {
             'dates': ['2011-01-01T00:00:00Z']
         }
-        assert user.as_json_dict(only=['dates']) == json
+        assert user.as_json(only=['dates']) == json
 
 
 class TestSerializationParams(object):
@@ -94,7 +94,7 @@ class TestSerializationParams(object):
             'fullname': 'John Matrix'
         }
 
-        assert user.as_json_dict(only=[('name as fullname')]) == json
+        assert user.as_json(only=[('name as fullname')]) == json
 
     def test_supports_exclude(self):
         user = User()
@@ -105,7 +105,7 @@ class TestSerializationParams(object):
             'name': 'John Matrix'
         }
 
-        assert user.as_json_dict(exclude=['age', 'created_at']) == json
+        assert user.as_json(exclude=['age', 'created_at']) == json
 
     def test_none_can_be_used_as_default_argument(self):
         user = User()
@@ -115,7 +115,7 @@ class TestSerializationParams(object):
             'name': None
         }
 
-        assert user.as_json_dict(only=[('name')]) == json
+        assert user.as_json(only=[('name')]) == json
 
     def test_supports_object_nesting(self):
         userA = User()
@@ -126,7 +126,7 @@ class TestSerializationParams(object):
         userA.friend = userB
 
         json = {'name': 'John', 'friend': {'name': 'Jack'}}
-        assert userA.as_json_dict(only=[
+        assert userA.as_json(only=[
             'name',
             ('friend', {'only': ['name']})
         ]) == json
@@ -140,7 +140,7 @@ class TestSerializationParams(object):
 
         json = {'name': 'John', 'friend 1': {'name': 'Jack'}}
 
-        assert userA.as_json_dict(only=[
+        assert userA.as_json(only=[
             'name',
             ('friend as friend 1', {'only': ['name']})
         ]) == json
@@ -149,10 +149,10 @@ class TestSerializationParams(object):
         user = User()
         user.name = empty
 
-        user.as_json_dict(only=['name']) == {}
+        assert user.as_json(only=['name']) == {}
 
-    def test_supports_custom_serializers(self):
+    def test_to_json_returns_jsonified_string(self):
         user = User()
-        user.name = empty
+        user.name = 'Jack'
 
-        user.as_json_dict(only=['name']) == {}
+        assert user.to_json(only=['name']) == '{"name": "Jack"}'

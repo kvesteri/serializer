@@ -1,4 +1,7 @@
-import simplejson as json
+try:
+    import simplejson as _json
+except ImportError:
+    import json as _json
 
 
 class Empty():
@@ -20,7 +23,7 @@ def dumps(value, args):
     return value
 
 
-class BourneMixin(object):
+class Serializable(object):
     def attributes(self):
         """
         This method is being used by as_json for defining the default json
@@ -40,7 +43,7 @@ class BourneMixin(object):
 
         Examples::
 
-            >>> User(BourneMixin):
+            >>> User(Serializable):
             ...     def attribute_sets():
             ...         return {'details': ['id', 'name', 'age']}
             >>> User(id=1, name='someone',).as_json(only='details')
@@ -48,78 +51,75 @@ class BourneMixin(object):
         """
         return {}
 
-    def as_json(self, only=None, exclude=None, include=None):
+    def to_xml(self, only=None, exclude=None, include=None):
+        raise NotImplementedError
+
+    def to_json(self, only=None, exclude=None, include=None):
         """
         This mimics the as_json found in RoR ActiveModel
         for more info see:
         http://api.rubyonrails.org/classes/ActiveModel/Serializers/JSON.html
         """
-        return json.dumps(self.as_json_dict(), use_decimal=True)
+        return _json.dumps(self.as_json(), use_decimal=True)
 
-    def as_json_dict(self, only=None, exclude=None, include=None):
+    def as_json(self, only=None, exclude=None, include=None):
         """
         Returns object attributes as a dictionary with jsonified values
 
         Without any options, the returned JSON string will include all the
         fields returned by the models attribute() method. For example:
 
-        class User(BourneMixin):
-            def attributes(self):
-                return [
-                    'id',
-                    'name',
-                    'first_name',
-                    'last_name'
-                ]
-
-        user = User.query.get(1)
-        user.as_json()
-
-        # => {"id": 1,
-              "name": "John Matrix",
-              "first_name": "John",
-              "last_name": "Matrix"}
+        >>> class User(Serializable):
+        ...    def attributes(self):
+        ...        return [
+        ...            'id',
+        ...            'first_name',
+        ...            'last_name'
+        ...        ]
+        ...
+        >>> user = User()
+        >>> user.first_name = 'John'
+        >>> user.last_name = 'Matrix'
+        >>> user.as_json()
+        {"id": 1, "first_name": "John", "last_name": "Matrix"}
 
         The 'only' and 'exclude' options can be used to limit the attributes
         included. For example:
 
-        user.as_json(only=['id', 'name'])
-        # => {"id": 1, "name": "John Matrix"}
+        >>> user.as_json(only=['id', 'first_name'])
+        {"id": 1, "first_name": "John"}
 
-        user.as_json(exclude=['id'])
-        # => {"name": "John Matrix",
-              "first_name": "John",
-              "last_name": "Matrix"}
+        >>> user.as_json(exclude=['id'])
+        {"first_name": "John", "last_name": "Matrix"}
 
         To include the result of some additional attributes, method calls,
         attribute sets or associations on the model use 'include'.
 
-        user.as_json(include=['weight'])
-        # => {"id": 1,
-              "name": "John Matrix",
-              "first_name": "John",
-              "last_name": "Matrix",
-              "weight": 100}
+        >>> user.weight = 120
+        >>> user.as_json(include=['weight'])
+        {"id": 1, "first_name": "John", "last_name": "Matrix", "weight": 120}
 
         Sometimes its useful to assign aliases for attributes. This can be
         achieved using keyword 'as'.
 
-        user.as_json(only=['name as full_name'])
-        # => {"full_name": "John Matrix"}
+        >>> user.as_json(only=['first_name as alias'])
+        {"alias": "John"}
 
         In order to fine grain what gets included in associations you can use
         'include' parameter with additional arguments.
 
-        user.as_json(include=[('posts', {'include': 'details'})]
-        # => {"id": 1,
-              "name": "John Matrix",
-              "first_name": "John",
-              "last_name": "Matrix",
-              "weight": 100,
-              "posts": [
-                  {"id": 1, "author_id": 1, "title": "First post"},
-                  {"id": 2, author_id: 1, "title": "Second post"}
-              ]}
+        >>> user.as_json(include=[('posts', {'include': 'details'})]
+        {
+            "id": 1,
+            "name": "John Matrix",
+            "first_name": "John",
+            "last_name": "Matrix",
+            "weight": 100,
+            "posts": [
+              {"id": 1, "author_id": 1, "title": "First post"},
+              {"id": 2, author_id: 1, "title": "Second post"}
+            ]
+        }
 
         Second level and higher order associations work as well:
 
@@ -132,48 +132,57 @@ class BourneMixin(object):
               }
         )]
 
-        # => {"id": 1,
-              "name": "John Matrix",
-              "first_name": "John",
-              "last_name": "Matrix",
-              "weight": 100,
-              "posts": [
-                  {"comments": [{"body": "1st post!"}, {"body": "Second!"}],
-                  "title": "Welcome to the weblog"},
-                  {"comments": [{"body": "Don't think too hard"}],
-                  "title": "So I was thinking"}
-              ]}
+       {
+            "id": 1,
+            "first_name": "John",
+            "last_name": "Matrix",
+            "weight": 100,
+            "posts": [
+                {
+                    "comments": [
+                        {"body": "1st post!"}, {"body": "Second!"}
+                    ],
+                    "title": "Welcome to the weblog"
+                },
+            ]
+        }
         """
-        return jsonify_model(self, only=only, exclude=exclude, include=include)
+        return serialize(self, only=only, exclude=exclude, include=include)
 
 
-def jsonify_model(model, only=None, exclude=None, include=None):
+def serialize(serializable, only=None, exclude=None, include=None):
     """
-    Jsonifies given model object
+    Serializes given object
 
-    See :func:`as_json` for more info
-
-    :param model: object to be converted into json
+    :param serializable: object to be serialized
     :param only: list of attributes to be included in json, if this parameter
         is not set attributes() method of the model will be used for obtaining
         the list of attributes names
-    :param exclude: list of attributes to be excluded from the json format
-    :param include: list of attribute names to be included in json, attribute
-        names can be any properties of `model` (even method names)
+    :param exclude: list of attributes to be excluded from the serialized
+        format
+    :param include: list of attribute names to be included in serialized hash,
+        attribute names can be any properties of `serializable` (even method
+        names)
     """
-    json = {}
+    serialized = {}
     if only:
-        json.update(jsonify_iterable(model, only))
+        serialized.update(
+            serialize_iterable(serializable, only)
+        )
     else:
-        json.update(jsonify_iterable(model, model.attributes(), exclude))
+        serialized.update(
+            serialize_iterable(
+                serializable, serializable.attributes(), exclude
+            )
+        )
     if include:
-        json.update(jsonify_iterable(model, include))
+        serialized.update(serialize_iterable(serializable, include))
 
-    return cleanup(json)
+    return cleanup(serialized)
 
 
 OBJECT_DUMPERS = {
-    BourneMixin: lambda a, b: jsonify_model(a, **copy_args(b)),
+    Serializable: lambda a, b: serialize(a, **copy_args(b)),
     'datetime': lambda a, b: a.strftime('%Y-%m-%dT%H:%M:%SZ') if a else None,
     'date': lambda a, b: a.isoformat() if a else None,
     list: lambda a, b: [dumps(c, b) for c in a],
@@ -266,7 +275,7 @@ def unpack_key(key):
     return parts
 
 
-def cleanup(json):
+def cleanup(serialized):
     """
     Remove all missing values. Sometimes its useful for object methods
     to return missing value in order to not include that value in the
@@ -274,7 +283,7 @@ def cleanup(json):
 
     Examples::
 
-        >>> User(BourneMixin):
+        >>> User(Serializable):
         ...     def attributes():
         ...         return ['id', 'name', 'birthday', 'somefunc']
         ...     def age():
@@ -292,37 +301,41 @@ def cleanup(json):
         >>> User(id=1, name='someone').as_json()
         {'id': 1, 'name': 'Someone'}
     """
-    return dict(filter(lambda a: a[1] is not empty, json.items()))
+    return dict(filter(lambda a: a[1] is not empty, serialized.items()))
 
 
-def jsonify_iterable(model, iterable, exclude=None):
+def serialize_iterable(serializable, iterable, exclude=None):
     """
-    Jsonifies iterable
+    serialize iterable
 
-    :param model: model of which the attributes belong to
+    :param serializable: serializable obj of which the iterable belong to
     :param iterable: attributes as iterable
     :param exclude: excluded attributes
     """
-    attr_sets = model.attribute_sets()
-    json = {}
+    attr_sets = serializable.attribute_sets()
+    serialized = {}
 
-    for json_key, args in map(unpack_args, iterable):
-        if exclude and json_key in exclude:
+    for key, args in map(unpack_args, iterable):
+        if exclude and key in exclude:
             continue
-        if json_key in attr_sets:
-            subattrs = attr_sets[json_key]
+        if key in attr_sets:
+            subattrs = attr_sets[key]
             for key, subargs in map(unpack_args, subattrs):
                 model_attr, alias = unpack_key(key)
-                json[alias] = jsonify_attribute(model, model_attr, subargs)
+                serialized[alias] = serialize_attribute(
+                    serializable, model_attr, subargs
+                )
         else:
-            model_attr, alias = unpack_key(json_key)
-            json[alias] = jsonify_attribute(model, model_attr, args)
-    return json
+            model_attr, alias = unpack_key(key)
+            serialized[alias] = serialize_attribute(
+                serializable, model_attr, args
+            )
+    return serialized
 
 
-def jsonify_attribute(model, attr, args=None):
+def serialize_attribute(obj, attr, args=None):
     """
-    Jsonifies single object attribute
+    Serializes single object attribute
 
     :param model: model of which the attribute belongs to
     :param attr: the name of the attribute
@@ -331,10 +344,10 @@ def jsonify_attribute(model, attr, args=None):
     if not args:
         args = {}
 
-    if not hasattr(model, attr):
+    if not hasattr(obj, attr):
         value = empty
     else:
-        value = getattr(model, attr)
+        value = getattr(obj, attr)
 
     value = dumps(value, args)
 
