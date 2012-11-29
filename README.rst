@@ -1,12 +1,12 @@
-bourne
-======
+Serializer
+==========
 
-Bourne provides smart Python object to json conversion.
+Easy object serialization. Mimics RoR ActiveRecord serializer.
 
 
 Resources
 ---------
 
-- `Documentation <http://bourne.readthedocs.org/>`_
-- `Issue Tracker <http://github.com/kvesteri/bourne/issues>`_
-- `Code <http://github.com/kvesteri/bourne/>`_
+- `Documentation <http://serializer.readthedocs.org/>`_
+- `Issue Tracker <http://github.com/kvesteri/serializer/issues>`_
+- `Code <http://github.com/kvesteri/serializer/>`_

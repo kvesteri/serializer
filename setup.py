@@ -5,14 +5,14 @@ except ImportError:
 
 
 setup(
-    name='bourne',
+    name='Serializer',
     version='0.1.0',
-    description='Easy RoR-style object json serialization.',
+    description='Easy object serialization. Mimics RoR ActiveRecord serializer.',
     long_description=__doc__,
     author='Konsta Vesterinen',
     author_email='konsta.vesterinen@gmail.com',
-    url='http://github.com/kvesteri/bourne',
-    packages=['bourne'],
+    url='http://github.com/kvesteri/serializer',
+    packages=['serializer'],
     include_package_data=True,
     license='BSD',
     zip_safe=False,
