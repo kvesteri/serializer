@@ -29,7 +29,7 @@ class Serializable(object):
         This method is being used by as_json for defining the default json
         attributes for this model.
 
-        Models using BourneMixin can override this and return a list of desired
+        Serializable objects can override this and return a list of desired
         default attributes.
         """
         return self.__table__.c.keys()
