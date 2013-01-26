@@ -161,6 +161,9 @@ class TestSerializationParams(object):
         user = User()
         user.name = 'Jack'
         assert (
+            user.to_xml() == '<?xml version="1.0" ?>\n<name>Jack</name>\n'
+        )
+        assert (
             user.to_xml(only=['name']) ==
             '<?xml version="1.0" ?>\n<name>Jack</name>\n'
         )
