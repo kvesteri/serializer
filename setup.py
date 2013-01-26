@@ -6,8 +6,11 @@ except ImportError:
 
 setup(
     name='Serializer',
-    version='0.1.0',
-    description='Easy object serialization. Mimics RoR ActiveRecord serializer.',
+    version='0.2.0',
+    description=(
+        'Easy object serialization. '
+        'Mimics RoR ActiveRecord serializer.'
+    ),
     long_description=__doc__,
     author='Konsta Vesterinen',
     author_email='konsta.vesterinen@gmail.com',

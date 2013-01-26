@@ -1,3 +1,4 @@
+from xml.dom.minidom import Document
 try:
     import simplejson as _json
 except ImportError:
@@ -21,6 +22,47 @@ def dumps(value, args):
         value = value()
     value = dump_object(value, args)
     return value
+
+
+class Dict2XML(object):
+    """
+    Slightly modified version of
+    http://code.activestate.com/recipes/577739-dict2xml/
+    """
+
+    def __init__(self, structure):
+        self.doc = Document()
+
+        if len(structure) == 1:
+            root_name = str(structure.keys()[0])
+            self.root = self.doc.createElement(root_name)
+
+            self.doc.appendChild(self.root)
+            self.build(self.root, structure[root_name])
+
+    def build(self, father, structure):
+        if isinstance(structure, dict):
+            for key in structure:
+                tag = self.doc.createElement(key)
+                father.appendChild(tag)
+                self.build(tag, structure[key])
+
+        elif isinstance(structure, list):
+            grand_father = father.parentNode
+            tag_name = father.tagName
+            grand_father.removeChild(father)
+            for key in structure:
+                tag = self.doc.createElement(tag_name)
+                self.build(tag, key)
+                grand_father.appendChild(tag)
+
+        else:
+            data = str(structure)
+            tag = self.doc.createTextNode(data)
+            father.appendChild(tag)
+
+    def __call__(self, *args, **kwargs):
+        return self.doc.toprettyxml(*args, **kwargs)
 
 
 class Serializable(object):
@@ -51,8 +93,10 @@ class Serializable(object):
         """
         return {}
 
-    def to_xml(self, only=None, exclude=None, include=None):
-        raise NotImplementedError
+    def to_xml(self, only=None, exclude=None, include=None, **kwargs):
+        return Dict2XML(
+            self.as_json(only=only, exclude=exclude, include=include)
+        )(**kwargs)
 
     def to_json(self, only=None, exclude=None, include=None):
         """

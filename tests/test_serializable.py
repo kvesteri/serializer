@@ -156,3 +156,11 @@ class TestSerializationParams(object):
         user.name = 'Jack'
 
         assert user.to_json(only=['name']) == '{"name": "Jack"}'
+
+    def test_to_xml_returns_xmlified_string(self):
+        user = User()
+        user.name = 'Jack'
+        assert (
+            user.to_xml(only=['name']) ==
+            '<?xml version="1.0" ?>\n<name>Jack</name>\n'
+        )
