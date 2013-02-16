@@ -1,5 +1,5 @@
 Welcome to Serializer documentation!
-==================================
+====================================
 
 Serializer provides Easy object serialization. Mimics RoR ActiveRecord serializer.
 
@@ -107,10 +107,18 @@ that return user with only its basic info. ::
     '''
 
 
-Indices and tables
-==================
+API Documentation
+-----------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. module:: serializer
+.. autoclass:: Serializable
+    :members:
+
+.. include:: ../CHANGES.rst
+
+
+License
+-------
+
+.. include:: ../LICENSE
 

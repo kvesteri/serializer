@@ -66,6 +66,12 @@ class Dict2XML(object):
 
 
 class Serializable(object):
+    """
+    This class mimics the functionality found in RoR ActiveModel.
+    For more info see:
+    http://api.rubyonrails.org/classes/ActiveModel/Serializers/JSON.html
+    """
+
     def attributes(self):
         """
         This method is being used by as_json for defining the default json
@@ -73,8 +79,21 @@ class Serializable(object):
 
         Serializable objects can override this and return a list of desired
         default attributes.
+
+        Examples::
+
+            >>> User(Serializable):
+            ...     def __init__(name, age):
+            ...         self.name = name
+            ...         self.age = age
+            ...
+            ...     def attributes(self):
+            ...         return ['name', 'age']
+            ...
+            >>> User('John', 50).as_json()
+            {'name': 'John', 'age': 50}
         """
-        return self.__table__.c.keys()
+        return []
 
     def attribute_sets(self):
         """
@@ -86,7 +105,7 @@ class Serializable(object):
         Examples::
 
             >>> User(Serializable):
-            ...     def attribute_sets():
+            ...     def attribute_sets(self):
             ...         return {'details': ['id', 'name', 'age']}
             >>> User(id=1, name='someone',).as_json(only='details')
             {'id': 1, 'name': 'Someone', 'age': 14}
@@ -94,21 +113,43 @@ class Serializable(object):
         return {}
 
     def to_xml(self, only=None, exclude=None, include=None, **kwargs):
+        """
+        Returns the object attributes serialized in xml format
+
+        :param only: a list containing attribute names to only include in the
+                     returning xml
+        :param exclude: a list containing attributes names to exclude from the
+                        returning xml
+        :param include: a list containing attribute names to include in the
+                        returning xml
+        """
         return Dict2XML(
             self.as_json(only=only, exclude=exclude, include=include)
         )(**kwargs)
 
     def to_json(self, only=None, exclude=None, include=None):
         """
-        This mimics the as_json found in RoR ActiveModel
-        for more info see:
-        http://api.rubyonrails.org/classes/ActiveModel/Serializers/JSON.html
+        Returns the object attributes serialized in json format
+
+        :param only: a list containing attribute names to only include in the
+                     returning json
+        :param exclude: a list containing attributes names to exclude from the
+                        returning json
+        :param include: a list containing attribute names to include in the
+                        returning json
         """
         return _json.dumps(self.as_json(), use_decimal=True)
 
     def as_json(self, only=None, exclude=None, include=None):
         """
         Returns object attributes as a dictionary with jsonified values
+
+        :param only: a list containing attribute names to only include in the
+                     returning dictionary
+        :param exclude: a list containing attributes names to exclude from the
+                        returning dictionary
+        :param include: a list containing attribute names to include in the
+                        returning dictionary
 
         Without any options, the returned JSON string will include all the
         fields returned by the models attribute() method. For example:
@@ -167,16 +208,15 @@ class Serializable(object):
 
         Second level and higher order associations work as well:
 
-        user.as_json('include'= [('posts',
-              {
-              'include': [
-                      ('comments, {'only': ['body']})
-                  ],
-              'only': [title]
-              }
-        )]
-
-       {
+        >>> user.as_json('include'= [('posts',
+        ...      {
+        ...       'include': [
+        ...               ('comments', {'only': ['body']})
+        ...           ],
+        ...       'only': ['title']
+        ...       }
+        ... )]
+        {
             "id": 1,
             "first_name": "John",
             "last_name": "Matrix",

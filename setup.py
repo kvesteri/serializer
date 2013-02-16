@@ -6,7 +6,7 @@ except ImportError:
 
 setup(
     name='Serializer',
-    version='0.2.0',
+    version='0.2.1',
     description=(
         'Easy object serialization. '
         'Mimics RoR ActiveRecord serializer.'
