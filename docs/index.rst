@@ -113,7 +113,7 @@ API Documentation
 .. module:: serializer
 .. autoclass:: Serializable
     :members:
-.. autofunct:: register_dumper
+.. autofunction:: register_dumper
 
 .. include:: ../CHANGES.rst
 
