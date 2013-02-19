@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'bourne'
+project = u'Serializer'
 copyright = u'2012, Konsta Vesterinen'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'bournedoc'
+htmlhelp_basename = 'serializerdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -178,7 +178,7 @@ htmlhelp_basename = 'bournedoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'bourne.tex', u'bourne Documentation',
+  ('index', 'serializer.tex', u'Serializer Documentation',
    u'Konsta Vesterinen', 'manual'),
 ]
 
@@ -211,7 +211,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'bourne', u'bourne Documentation',
+    ('index', 'serializer', u'Serializer Documentation',
      [u'Konsta Vesterinen'], 1)
 ]
 
